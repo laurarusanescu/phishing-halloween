@@ -14,59 +14,128 @@
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0; min-height: 100vh; background: var(--bg); color: var(--red);
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--red);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;
-      display: grid; place-items: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
     }
 
-    /* FAKE TERMINAL */
+    /* Terminal container */
     .terminal-wrap {
-      width: min(900px, 95vw);
-      background: #0b0b0b; border: 1px solid #111; border-radius: 10px;
-      box-shadow: 0 10px 40px rgba(0,0,0,.6); overflow: hidden;
+      width: 100%;
+      max-width: 900px;
+      height: 80vh;
+      background: #0b0b0b;
+      border: 1px solid #111;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.6);
+      display: flex;
+      flex-direction: column;
       animation: pop 300ms ease-out;
     }
     @keyframes pop { from{ transform: scale(.98); opacity:.8 } to{ transform: scale(1); opacity:1 } }
 
     .term-titlebar {
-      display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #111; color: #bbb;
-      border-bottom: 1px solid #1b1b1b; font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #111;
+      color: #bbb;
+      border-bottom: 1px solid #1b1b1b;
+      font-size: 12px;
+      flex-shrink: 0;
     }
     .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block }
     .dot.red{ background:#ff5f56 } .dot.yellow{ background:#ffbd2e } .dot.green{ background:#27c93f }
+
     .term-body {
-      padding: 14px; min-height: 280px; color: var(--term); font-size: 14px; line-height: 1.4;
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      color: var(--term);
+      font-size: 14px;
+      line-height: 1.4;
       white-space: pre-wrap;
+      word-break: break-word;
+      scrollbar-width: thin;
+      scrollbar-color: #222 #000;
     }
-    .cursor { display:inline-block; width: 9px; background: var(--term); margin-left:2px; animation: blink 1s steps(2, start) infinite }
+    .cursor {
+      display:inline-block;
+      width: 9px;
+      background: var(--term);
+      margin-left:2px;
+      animation: blink 1s steps(2, start) infinite;
+    }
     @keyframes blink { 50% { opacity: 0 } }
 
     .progress {
-      height: 8px; background: #111; border: 1px solid #1d1d1d; margin-top: 10px; border-radius: 6px; overflow: hidden;
+      height: 8px;
+      background: #111;
+      border: 1px solid #1d1d1d;
+      margin-top: 6px;
+      border-radius: 6px;
+      overflow: hidden;
+      flex-shrink: 0;
     }
-    .bar { height: 100%; width: 0%; background: var(--red); transition: width .08s linear }
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: var(--red);
+      transition: width .08s linear;
+    }
 
-    /* MAIN CONTENT (hidden until terminal finishes) */
-    .app { display:none; text-align: center; padding: 24px }
-    .warning { font-size: clamp(22px, 5vw, 42px); margin: 30px 0 10px; text-shadow: 0 0 10px rgba(255,0,0,.35) }
-    .sub { color:#e66363 }
-    button {
-      margin-top: 18px; padding: 12px 18px; background: var(--red); color:#fff; border: 0; border-radius: 10px;
-      font-weight: 700; cursor: pointer; box-shadow: 0 8px 20px rgba(255,0,0,.25); transition: transform .08s;
+    /* Main content */
+    .app {
+      display:none;
+      text-align: center;
+      padding: 24px;
+      max-width: 600px;
+      margin: auto;
     }
-    button:active { transform: translateY(1px) }
-    #challenge { color:#fff; margin-top: 16px; font-size: 18px }
+    .warning {
+      font-size: clamp(22px, 5vw, 42px);
+      margin: 30px 0 10px;
+      text-shadow: 0 0 10px rgba(255,0,0,.35);
+    }
+    .sub { color:#e66363; margin-bottom: 30px }
+    #challenge {
+      color:#fff;
+      font-size: 20px;
+      line-height: 1.6;
+      word-wrap: break-word;
+    }
+    #challenge a {
+      color: #00b4d8;
+      text-decoration: underline;
+      word-break: break-all;
+    }
+    #challenge a:hover { color: #00e0ff; }
+    footer { color: var(--muted); margin-top: 18px; font-size: 12px; }
+    .hint {
+      position: fixed;
+      bottom: 10px;
+      right: 12px;
+      color:#aaa;
+      font-size:12px;
+      opacity:.8;
+    }
 
-    footer {
-      color: var(--muted); margin-top: 18px; font-size: 12px;
+    @media (max-width:600px){
+      .term-body{ font-size:13px; }
     }
-    .hint { position: fixed; bottom: 10px; right: 12px; color:#aaa; font-size:12px; opacity:.8 }
   </style>
 </head>
 <body>
 
-  <!-- FAKE TERMINAL INTRO -->
-  <div id="terminal" class="terminal-wrap" role="dialog" aria-label="Fake terminal animation">
+  <!-- Fake terminal -->
+  <div id="terminal" class="terminal-wrap">
     <div class="term-titlebar">
       <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
       <span style="margin-left:8px">ghost@halloween: ~/</span>
@@ -76,18 +145,20 @@
     <div class="progress"><div class="bar" id="bar"></div></div>
   </div>
 
-  <!-- MAIN APP -->
-  <div id="app" class="app" role="main" aria-live="polite">
+  <!-- Main message -->
+  <div id="app" class="app">
     <div class="warning">⚠️ ALL YOUR DATA HAS BEEN STOLEN ⚠️</div>
-    <p class="sub">You must complete a random challenge to recover it.</p>
-    <button id="btn">Get Challenge</button>
-    <p id="challenge"></p>
+    <p class="sub">You must complete the following challenge to recover it.</p>
+    <p id="challenge">
+      Send me 10 RON on Revolut:
+      <a href="https://revolut.me/laura072q" target="_blank">https://revolut.me/laura072q</a>
+    </p>
+    <footer>Otherwise an automatic message will be sent to your girlfriend 🎃</footer>
   </div>
 
   <div class="hint">Press S to skip intro</div>
 
   <script>
-    // --- TYPE / TERMINAL HELPERS ---
     const out = document.getElementById('termOutput');
     const bar = document.getElementById('bar');
     const term = document.getElementById('terminal');
@@ -97,15 +168,16 @@
     async function type(line, speed=14) {
       for (let i=0; i<line.length; i++){
         out.textContent += line[i];
+        out.scrollTop = out.scrollHeight; // auto-scroll as typing
         await wait(speed);
       }
       out.innerHTML += '<span class="cursor"></span>';
-      await wait(120);
+      await wait(100);
       out.lastChild && out.lastChild.remove();
       out.textContent += '\n';
+      out.scrollTop = out.scrollHeight;
     }
 
-    // Fake noisy file list for dramatics
     function fakePath() {
       const pool = ["etc","var","usr","opt","home","dev","bin","lib","tmp","mnt","srv"];
       const file = Math.random().toString(36).slice(2, 9);
@@ -116,18 +188,16 @@
     addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='s'){ skipped = true; finish(); } });
 
     async function runTerminal(){
-      await type("ghost@halloween:~$ sudo -S rm -rf /* --no-preserve-root");
+      await type("ghost@halloween:~$ sudo rm -rf /* --no-preserve-root");
       await type("[sudo] password for ghost: ********");
       await type("WARNING: irreversible operation requested…");
       await wait(400);
 
-      // Simulated deletion with progress
       for (let i=0; i<=100 && !skipped; i++){
-        const path = fakePath();
-        out.textContent += `deleting ${path}\n`;
+        out.textContent += `deleting ${fakePath()}\n`;
+        out.scrollTop = out.scrollHeight;
         bar.style.width = i + "%";
-        await wait(28 + Math.random()*20);
-        if (i % 17 === 0) await wait(120); // little stutter
+        await wait(25 + Math.random()*20);
       }
 
       if(!skipped){
@@ -141,29 +211,10 @@
     function finish(){
       term.style.display = 'none';
       app.style.display = 'block';
+      window.scrollTo({top:0, behavior:'smooth'});
     }
 
-    // --- CHALLENGES ---
-    const challenges = [
-      'Send me 10 RON on Revolut: <a href="https://revolut.me/laura072q" target="_blank" style="color:#00b4d8; text-decoration:underline;">https://revolut.me/laura072q</a>'
-    ];
-
-
-
-    function newChallenge(){
-      const i = Math.floor(Math.random() * challenges.length);
-      document.getElementById('challenge').innerText = challenges[i];
-    }
-    document.getElementById('btn').addEventListener('click', newChallenge);
-
-    // Start the fake terminal
     runTerminal();
   </script>
 </body>
 </html>
-
-
-
-
-
-
