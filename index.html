@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Data Stolen!</title>
+  <style>
+    body { 
+      background-color: black; color: red; text-align: center; 
+      font-family: 'Courier New', monospace;
+    }
+    .warning { font-size: 2em; margin-top: 100px; }
+    button {
+      margin-top: 30px; padding: 10px 20px;
+      background: red; color: white; border: none; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="warning">⚠️ ALL YOUR DATA HAS BEEN STOLEN ⚠️</div>
+  <p>You must complete a random challenge to recover it.</p>
+  <button onclick="newChallenge()">Get Challenge</button>
+  <p id="challenge"></p>
+
+  <script>
+    const challenges = [
+      "Howl like a werewolf!",
+      "Tell your best ghost joke.",
+      "Do a zombie dance.",
+      "Speak in vampire voice for 10 seconds.",
+      "Pretend to be possessed for 5 seconds!"
+    ];
+    function newChallenge() {
+      const random = Math.floor(Math.random() * challenges.length);
+      document.getElementById("challenge").innerText = challenges[random];
+    }
+  </script>
+</body>
+</html>
