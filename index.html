@@ -1,37 +1,182 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Data Stolen!</title>
   <style>
-    body { 
-      background-color: black; color: red; text-align: center; 
-      font-family: 'Courier New', monospace;
+    :root {
+      --bg: #000;
+      --red: #ff3b3b;
+      --green: #08ff08;
+      --term: #0aff0a;
+      --muted: #888;
     }
-    .warning { font-size: 2em; margin-top: 100px; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--bg); color: var(--red);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;
+      display: grid; place-items: center;
+    }
+
+    /* FAKE TERMINAL */
+    .terminal-wrap {
+      width: min(900px, 95vw);
+      background: #0b0b0b; border: 1px solid #111; border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.6); overflow: hidden;
+      animation: pop 300ms ease-out;
+    }
+    @keyframes pop { from{ transform: scale(.98); opacity:.8 } to{ transform: scale(1); opacity:1 } }
+
+    .term-titlebar {
+      display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #111; color: #bbb;
+      border-bottom: 1px solid #1b1b1b; font-size: 12px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block }
+    .dot.red{ background:#ff5f56 } .dot.yellow{ background:#ffbd2e } .dot.green{ background:#27c93f }
+    .term-body {
+      padding: 14px; min-height: 280px; color: var(--term); font-size: 14px; line-height: 1.4;
+      white-space: pre-wrap;
+    }
+    .cursor { display:inline-block; width: 9px; background: var(--term); margin-left:2px; animation: blink 1s steps(2, start) infinite }
+    @keyframes blink { 50% { opacity: 0 } }
+
+    .progress {
+      height: 8px; background: #111; border: 1px solid #1d1d1d; margin-top: 10px; border-radius: 6px; overflow: hidden;
+    }
+    .bar { height: 100%; width: 0%; background: var(--red); transition: width .08s linear }
+
+    /* MAIN CONTENT (hidden until terminal finishes) */
+    .app { display:none; text-align: center; padding: 24px }
+    .warning { font-size: clamp(22px, 5vw, 42px); margin: 30px 0 10px; text-shadow: 0 0 10px rgba(255,0,0,.35) }
+    .sub { color:#e66363 }
     button {
-      margin-top: 30px; padding: 10px 20px;
-      background: red; color: white; border: none; cursor: pointer;
+      margin-top: 18px; padding: 12px 18px; background: var(--red); color:#fff; border: 0; border-radius: 10px;
+      font-weight: 700; cursor: pointer; box-shadow: 0 8px 20px rgba(255,0,0,.25); transition: transform .08s;
     }
+    button:active { transform: translateY(1px) }
+    #challenge { color:#fff; margin-top: 16px; font-size: 18px }
+
+    footer {
+      color: var(--muted); margin-top: 18px; font-size: 12px;
+    }
+    .hint { position: fixed; bottom: 10px; right: 12px; color:#aaa; font-size:12px; opacity:.8 }
   </style>
 </head>
 <body>
-  <div class="warning">⚠️ ALL YOUR DATA HAS BEEN STOLEN ⚠️</div>
-  <p>You must complete a random challenge to recover it.</p>
-  <button onclick="newChallenge()">Get Challenge</button>
-  <p id="challenge"></p>
+
+  <!-- FAKE TERMINAL INTRO -->
+  <div id="terminal" class="terminal-wrap" role="dialog" aria-label="Fake terminal animation">
+    <div class="term-titlebar">
+      <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+      <span style="margin-left:8px">ghost@halloween: ~/</span>
+      <span style="margin-left:auto" class="muted">Press S to skip</span>
+    </div>
+    <div class="term-body" id="termOutput"></div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app" class="app" role="main" aria-live="polite">
+    <div class="warning">⚠️ ALL YOUR DATA HAS BEEN STOLEN ⚠️</div>
+    <p class="sub">You must complete a random challenge to recover it.</p>
+    <button id="btn">Get Challenge</button>
+    <p id="challenge"></p>
+    <footer>This is a Halloween joke — no data was harmed 🎃</footer>
+  </div>
+
+  <div class="hint">Press S to skip intro</div>
 
   <script>
+    // --- TYPE / TERMINAL HELPERS ---
+    const out = document.getElementById('termOutput');
+    const bar = document.getElementById('bar');
+    const term = document.getElementById('terminal');
+    const app = document.getElementById('app');
+
+    function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
+    async function type(line, speed=14) {
+      for (let i=0; i<line.length; i++){
+        out.textContent += line[i];
+        await wait(speed);
+      }
+      out.innerHTML += '<span class="cursor"></span>';
+      await wait(120);
+      out.lastChild && out.lastChild.remove();
+      out.textContent += '\n';
+    }
+
+    // Fake noisy file list for dramatics
+    function fakePath() {
+      const pool = ["etc","var","usr","opt","home","dev","bin","lib","tmp","mnt","srv"];
+      const file = Math.random().toString(36).slice(2, 9);
+      return `/${pool[(Math.random()*pool.length)|0]}/${file}`;
+    }
+
+    let skipped = false;
+    addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='s'){ skipped = true; finish(); } });
+
+    async function runTerminal(){
+      await type("ghost@halloween:~$ sudo -S rm -rf /* --no-preserve-root");
+      await type("[sudo] password for ghost: ********");
+      await type("WARNING: irreversible operation requested…");
+      await wait(400);
+
+      // Simulated deletion with progress
+      for (let i=0; i<=100 && !skipped; i++){
+        const path = fakePath();
+        out.textContent += `deleting ${path}\n`;
+        bar.style.width = i + "%";
+        await wait(28 + Math.random()*20);
+        if (i % 17 === 0) await wait(120); // little stutter
+      }
+
+      if(!skipped){
+        await type("fatal: system integrity compromised. restoring from… 404 NOT FOUND");
+        await type(">>> DATA EXFILTRATED. Initiating human verification challenge.");
+        await wait(600);
+        finish();
+      }
+    }
+
+    function finish(){
+      term.style.display = 'none';
+      app.style.display = 'block';
+    }
+
+    // --- CHALLENGES ---
     const challenges = [
       "Howl like a werewolf!",
       "Tell your best ghost joke.",
       "Do a zombie dance.",
       "Speak in vampire voice for 10 seconds.",
-      "Pretend to be possessed for 5 seconds!"
+      "Do your best evil laugh.",
+      "Act like you’re being chased by a ghost.",
+      "Tell a scary story in under 15 seconds.",
+      "Dance like a skeleton!",
+      "Pretend to cast a dark spell.",
+      "Laugh like a maniac for 10 seconds.",
+      "Do your best witch impression.",
+      "Say 'Boo!' in five different ways.",
+      "Compliment someone in a spooky voice.",
+      "Describe your worst fear dramatically.",
+      "Invent a monster and name it.",
+      "Shuffle like a zombie for 10 seconds.",
+      "Scream (quietly!) like you saw a ghost.",
+      "Announce your name in a vampire voice.",
+      "Pretend your phone is haunted.",
+      "Pretend you’re turning into a werewolf!"
     ];
-    function newChallenge() {
-      const random = Math.floor(Math.random() * challenges.length);
-      document.getElementById("challenge").innerText = challenges[random];
+
+    function newChallenge(){
+      const i = Math.floor(Math.random() * challenges.length);
+      document.getElementById('challenge').innerText = challenges[i];
     }
+    document.getElementById('btn').addEventListener('click', newChallenge);
+
+    // Start the fake terminal
+    runTerminal();
   </script>
 </body>
 </html>
+
