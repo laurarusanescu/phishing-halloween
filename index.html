@@ -148,13 +148,13 @@
   <!-- Main message -->
   <div id="app" class="app">
     <div class="warning">⚠️ ALL YOUR DATA HAS BEEN STOLEN ⚠️</div>
-    <p class="sub">You must complete the following challenge to recover it.</p>
-    <p id="challenge">
-      Send me 10 RON on Revolut:
-    </p>
+    <p class="sub">You must  send me 10 RON to recover it.</p>
+    <footer>Otherwise an automatic message will be sent to your girlfriend 🎃</footer>
+    
+    
     <a href="https://revolut.me/laura072q" target="_blank">https://revolut.me/laura072q</a>
     
-    <footer>Otherwise an automatic message will be sent to your girlfriend 🎃</footer>
+    
   </div>
 
   <div class="hint">Press S to skip intro</div>
@@ -173,7 +173,7 @@
         await wait(speed);
       }
       out.innerHTML += '<span class="cursor"></span>';
-      await wait(100);
+      await wait(20);
       out.lastChild && out.lastChild.remove();
       out.textContent += '\n';
       out.scrollTop = out.scrollHeight;
@@ -219,4 +219,5 @@
   </script>
 </body>
 </html>
+
 
